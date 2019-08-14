@@ -24,8 +24,11 @@ async def fetch(session,url,conf):
     
     data = dict.fromkeys(['error','url','status','headers'])
     try:
-        with aiohttp.Timeout(conf.timeout, loop=session.loop):    
-            async with session.get(url,headers=conf.headers) as r:
+        async with session.get(
+            url,
+            headers=conf.headers,
+            timeout=conf.timeout
+            ) as r:
                 status = r.status
                 headers = r.headers
                 data.update(
@@ -43,7 +46,7 @@ async def fetch(session,url,conf):
         
     except Exception as err:
         print('-' * 20  + "\n")
-        conf.log.error('Fetch => %s|%s',str(err),url)
+        conf.log.error('Fetch => %s|%s',err,url)
         data.update(
             {'error':str(err),'url':url}
         )
@@ -138,7 +141,7 @@ class Config():
                 'DNT':'1',
                }
         self.return_exceptions = return_exceptions
-        self.timeout = timeout # таймаут (в сек.) ожидания ответа от сервера
+        self.timeout = aiohttp.ClientTimeout(timeout)              # таймаут (в сек.) ожидания ответа от сервера
         self.source = argv[1] if len(argv) > 1 else "ip_list.txt"  # файл источник данных
         self.dest = argv[2] if len(argv) > 2 else "dest.txt"       # файл для записи данных
         self.format = format
